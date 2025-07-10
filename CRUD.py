@@ -1,6 +1,5 @@
 import json
 from datetime import date
-import math
 
 # Arquivo para armazenar informações
 registros = "registros.json"
@@ -30,41 +29,55 @@ def salvar_dados(cadastros, type):
         with open(produtos, "w") as arquivo: #Escreve o arquivo ou sobrescreve um arquivo .json
             json.dump(cadastros, arquivo, indent=4)  #Descarrega as informações para cadastros
 
+def opcoes_cadastro(opcao):
+    cadastros = carregar_dados("clientes")
+
+    if(opcao == "nome"):
+        nome_cliente = input("Digite o nome do cliente: ")
+        if nome_cliente.strip() == "":
+            print("Nome não pode estar vazio.")
+            return
+        else: return nome_cliente
+
+    if(opcao == "nascimento"):
+        try:
+            nascimento = input("Digite sua data de nascimento (Exemplo: 06/09/2000): ")
+            if len(nascimento) != 10:
+                print("Use o formato de xx/xx/xxxx para a data. Exemplo: 06/09/2000")
+                return
+            else:
+                dataNascimento = date(int(nascimento[6:]),int(nascimento[3:5]),int(nascimento[:2]))
+                return nascimento
+        except ValueError:
+            print("Use o formato de xx/xx/xxxx para a data. Exemplo: 06/09/2000")
+            return
+    
+    if(opcao == "email"):
+        email = input("Digite o email: ")
+        if "@" not in email:
+            print("E-mail inválido.")
+            return
+        else: return email
+    
+    if(opcao == "cpf"):
+        cpf = input("Digite o CPF: (use apenas números) ")
+        if len(cpf) != 11 or not cpf.isdigit():
+            print("Cpf inválido.")
+            return
+        else: return cpf
+    
+    if(opcao == "telefone"):
+        telefone = input("Digite um número para contato: (use apenas números) ")
+        if not telefone.isdigit():
+            print("Número de Telefone inválido")
+            return
+        else: return telefone
+    
 # Função para adicionar um novo cadastro
 def adicionar_cadastro():
     cadastros = carregar_dados("clientes")
-    nome_cliente = input("Digite o nome do cliente: ")
-    if nome_cliente.strip() == "":
-        print("Nome não pode estar vazio.")
-        return
-    
-    try:
-        nascimento = input("Digite sua data de nascimento (Exemplo: 06/09/2000): ")
-        if len(nascimento) != 10:
-            print("Use o formato de xx/xx/xxxx para a data. Exemplo: 06/09/2000")
-            return
-        else:
-            dataNascimento = date(int(nascimento[6:]),int(nascimento[3:5]),int(nascimento[:2]))
-    except ValueError:
-        print("Use o formato de xx/xx/xxxx para a data. Exemplo: 06/09/2000")
-        return
 
-    email = input("Digite o email: ")
-    if "@" not in email:
-        print("E-mail inválido.")
-        return
-
-    cpf = input("Digite o CPF: (use apenas números) ")
-    if len(cpf) != 11 or not cpf.isdigit():
-        print("Cpf inválido.")
-        return
-
-    telefone = input("Digite um número para contato: (use apenas números) ")
-    if not telefone.isdigit():
-        print("Número de Telefone inválido")
-        return
-
-    cadastros.append({"nome": nome_cliente, "nascimento": nascimento, "email": email, "cpf": cpf, "telefone": telefone}) #Adiciona as informações nos vetores
+    cadastros.append({"nome": opcoes_cadastro("nome"), "nascimento": opcoes_cadastro("nascimento"), "email": opcoes_cadastro("email"), "cpf": opcoes_cadastro("cpf"), "telefone": opcoes_cadastro("telefone")}) #Adiciona as informações nos vetores
     salvar_dados(cadastros, "clientes")
     print("\nCliente cadastrado com sucesso!")
 
@@ -79,6 +92,7 @@ def verificar_cadastros():
         # Exibição dos dados dos clientes
         for cliente in cadastros:
             cpfFormatado = f"{cliente['cpf'][:3]}.{cliente['cpf'][3:6]}.{cliente['cpf'][6:9]}-{cliente['cpf'][9:]}" # Formatação do cpf para o formato com . e - 
+
             dataNascimento = date(int(cliente['nascimento'][6:]),int(cliente['nascimento'][3:5]),int(cliente['nascimento'][:2])) # Transforma a data de nascimento em um formato xx-xx-xxxx
             idade = (date.today() - dataNascimento).days//365 # Diminui o dia de hoje pela data de nascimento e converte para anos
 
@@ -90,7 +104,7 @@ def verificar_cadastros():
 def atualizar_cadastros():
     cadastros = carregar_dados("clientes")
     verificar_cadastros() #Chama a função de verificação já formatada para a exibição dos cadastros
-    cpf = input("\nDigite o CPF do cliente que deseja atualizar (ou 'cancelar' para voltar): ")
+    cpf = input("\nDigite o CPF do cliente que deseja atualizar, usando apenas números (ou 'cancelar' para voltar): ")
     if cpf.lower() == 'cancelar': #Utilização do lower para o uso da palavra em maiuscula como input.
         print("\nOperação de atualização cancelada.")
         return #Encerra o comando e retorna para o menu de escolha
@@ -98,21 +112,24 @@ def atualizar_cadastros():
         if cliente["cpf"] == cpf:
                 opcao = input("Digite a opção que deseja alterar: ")
 
-                if(opcao.lower() not in cliente): # Caso a opção escolhida não exista.
-                    print("Opção Inválida!") # Ele envia essa mensagem
-                    return
-                else: # Caso a opcao exista
-                    cliente[opcao.lower()] = input(F"Novo {opcao}: ") # Ele pede para atualizá-la               
+                if(opcao.lower() in cliente or opcao.lower() == "idade"): # Caso a opção escolhida exista.
+                    if(opcao.lower() == "idade"):
+                        opcao = "nascimento"
+
+                    cliente[opcao.lower()] = opcoes_cadastro(opcao.lower()) # Ele pede para atualizá-la               
                     salvar_dados(cadastros, "clientes") # E Envia para o JSON
                     print("\nCadastro atualizado com sucesso!")
-                return 
+                    return 
+                else: # Caso a não opcao exista
+                    print("Opção Inválida!") # Ele envia essa mensagem
+                    return
     print("\nCadastro não localizado") # Caso não encontre o CPF, essa mensagem será enviada.
 
 # Função para excluir um cadastro
 def excluir_cadastro():
     cadastros = carregar_dados("clientes")
     verificar_cadastros()
-    cpf = input("\nDigite o CPF do cliente a ser excluído (ou 'cancelar' para voltar): ")
+    cpf = input("\nDigite o CPF do cliente a ser excluído, usando apenas os números (ou 'cancelar' para voltar): ")
     
     if cpf.lower() == 'cancelar':
         print("\nOperação de exclusão cancelada.")
