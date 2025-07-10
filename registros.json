@@ -1,0 +1,25 @@
+[
+    {
+        "nome": "Rafael",
+        "idade": "25",
+        "email": "rafael@hotmail.com",
+        "cpf": "123",
+        "telefone": "3435-2717",
+        "saldo": 64.65
+    },
+    {
+        "nome": "Guilherme",
+        "idade": 18,
+        "email": "Guilherme@gmail.com",
+        "cpf": "11540430960",
+        "telefone": "47992623611",
+        "saldo": 0
+    },
+    {
+        "nome": "Paulo",
+        "idade": 18,
+        "email": "Guilherme@gmail.com",
+        "cpf": "11540430965",
+        "telefone": "1213123123"
+    }
+]
