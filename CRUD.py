@@ -12,13 +12,13 @@ def carregar_dados(type):
         try:
             with open(registros, "r") as arquivo: #Faz a leitura do arquivo .json
                 return json.load(arquivo)
-        except FileNotFoundError:
+        except (FileNotFoundError, json.JSONDecodeError):
             return []
     elif type == "produtos":
         try:
             with open(produtos, "r") as arquivo: #Faz a leitura do arquivo .json
                 return json.load(arquivo)
-        except FileNotFoundError:
+        except (FileNotFoundError, json.JSONDecodeError):
             return []
 
 # Função para salvar dados no arquivo
@@ -37,15 +37,16 @@ def adicionar_cadastro():
     if nome_cliente.strip() == "":
         print("Nome não pode estar vazio.")
         return
+    
     try:
-        diaNascimento = int(input("Digite seu dia de nascimento: "))
-        mesNascimento = int(input("Digite a seu mês de nascimento: "))
-        anoNascimento = int(input("Digite a seu ano de nascimento: "))
-        dataNascimento = date(anoNascimento,mesNascimento,diaNascimento)
-        diferencaData = date.today() - dataNascimento
-        idade = math.floor(diferencaData.days/365)
+        nascimento = input("Digite sua data de nascimento (Exemplo: 06/09/2000): ")
+        if len(nascimento) != 10:
+            print("Use o formato de xx/xx/xxxx para a data. Exemplo: 06/09/2000")
+            return
+        else:
+            dataNascimento = date(int(nascimento[6:]),int(nascimento[3:5]),int(nascimento[:2]))
     except ValueError:
-        print("Use apenas número para as datas.")
+        print("Use o formato de xx/xx/xxxx para a data. Exemplo: 06/09/2000")
         return
 
     email = input("Digite o email: ")
@@ -63,7 +64,7 @@ def adicionar_cadastro():
         print("Número de Telefone inválido")
         return
 
-    cadastros.append({"nome": nome_cliente, "idade": idade, "email": email, "cpf": cpf, "telefone": telefone}) #Adiciona as informações nos vetores
+    cadastros.append({"nome": nome_cliente, "nascimento": nascimento, "email": email, "cpf": cpf, "telefone": telefone}) #Adiciona as informações nos vetores
     salvar_dados(cadastros, "clientes")
     print("\nCliente cadastrado com sucesso!")
 
@@ -72,13 +73,16 @@ def verificar_cadastros():
     cadastros = carregar_dados("clientes")
     if cadastros:
         # Cabeçalho da tabela
-        print(f"\n{'Nome':<20} {'Idade':<6} {'Email':<30} {'CPF':<15} {'Telefone':<15}") #Formatação do cabeçalho
+        print(f"\n{'Nome':<20} {'Nascimento':<15} {'Idade':<6} {'Email':<30} {'CPF':<15} {'Telefone':<15}") #Formatação do cabeçalho
         print("-" * 100)  # Linha divisória
 
         # Exibição dos dados dos clientes
         for cliente in cadastros:
             cpfFormatado = f"{cliente['cpf'][:3]}.{cliente['cpf'][3:6]}.{cliente['cpf'][6:9]}-{cliente['cpf'][9:]}" # Formatação do cpf para o formato com . e - 
-            print(f"\n{cliente['nome']:<20} {cliente['idade']:<6} {cliente['email']:<30} {cpfFormatado:<15} {cliente['telefone']:<15}")#Formatação das váriaveis
+            dataNascimento = date(int(cliente['nascimento'][6:]),int(cliente['nascimento'][3:5]),int(cliente['nascimento'][:2])) # Transforma a data de nascimento em um formato xx-xx-xxxx
+            idade = (date.today() - dataNascimento).days//365 # Diminui o dia de hoje pela data de nascimento e converte para anos
+
+            print(f"\n{cliente['nome']:<20} {cliente['nascimento']:<15} {idade:<6} {cliente['email']:<30} {cpfFormatado:<15} {cliente['telefone']:<15}")#Formatação das váriaveis
     else:
         print("\nNenhum cadastro encontrado")
 
