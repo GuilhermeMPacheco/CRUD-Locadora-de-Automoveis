@@ -34,7 +34,7 @@ def opcoes_cadastro(opcao): # Função de pegar o resultado de cada item separad
         nome_cliente = input("Digite o nome do cliente: ")
         if nome_cliente.strip() == "": # Se o nome for vazio a função irá encerrar
             print("Nome não pode estar vazio.")
-            return 
+            return
         else: return nome_cliente
 
     if(opcao == "nascimento"):
@@ -53,7 +53,7 @@ def opcoes_cadastro(opcao): # Função de pegar o resultado de cada item separad
         except ValueError: # Caso não seja usado números 
             print("Use o formato de xx/xx/xxxx para a data. Exemplo: 06/09/2000")
             return
-    
+
     if(opcao == "email"): 
         email = input("Digite o email: ")
         if "@" not in email: # Caso o e-mail não contenha @ o código irá encerrar
@@ -92,7 +92,7 @@ def adicionar_cadastro():
         novo_cliente[item] = opcoes_cadastro(item) # Envia as opções para o objeto
         if novo_cliente[item] is None: # Caso ocorra algum erro, o código irá encerrar
             return
-
+    novo_cliente["alugado"] = False
     cadastros.append(novo_cliente) #Adiciona as informações nos vetores
     salvar_dados(cadastros, "clientes")
     print("\nCliente cadastrado com sucesso!")
@@ -108,7 +108,7 @@ def adicionar_produto():
     fabricante = input("Digite a fabricante do produto: ")
     carroceria = input("Digite o tipo de carro ou carroceria: ")
 
-    produtos.append({"nome": nome, "cor": cor, "ano": ano, "fabricante": fabricante, "carroceria": carroceria})
+    produtos.append({"nome": nome, "cor": cor, "ano": ano, "fabricante": fabricante, "carroceria": carroceria, "alugado": False})
     salvar_dados(produtos, "produtos")
     print("\nProduto cadastrado com sucesso!")
 
@@ -117,8 +117,8 @@ def verificar_cadastros():
     cadastros = carregar_dados("clientes")
     if cadastros:
         # Cabeçalho da tabela
-        print(f"\n{'Nome':<20} {'Nascimento':<15} {'Idade':<6} {'Email':<30} {'CPF':<15} {'CEP':<15} {'Telefone':<15}") #Formatação do cabeçalho
-        print("-" * 120)  # Linha divisória
+        print(f"\n{'Nome':<20} {'Nascimento':<15} {'Idade':<6} {'Email':<30} {'CPF':<15} {'CEP':<15} {'Telefone':<15} {'Produto Alugado'}") #Formatação do cabeçalho
+        print("-" * 140)  # Linha divisória
 
         # Exibição dos dados dos clientes
         for cliente in cadastros:
@@ -128,18 +128,21 @@ def verificar_cadastros():
             dataNascimento = date(int(cliente['nascimento'][6:]),int(cliente['nascimento'][3:5]),int(cliente['nascimento'][:2])) # Transforma a data de nascimento em um formato xx-xx-xxxx
             idade = (date.today() - dataNascimento).days//365 # Diminui o dia de hoje pela data de nascimento e converte para anos
 
-            print(f"\n{cliente['nome']:<20} {cliente['nascimento']:<15} {idade:<6} {cliente['email']:<30} {cpfFormatado:<15} {cepFormatado:<15} {cliente['telefone']:<15}") # Formatação das váriaveis
+            alugado = "❌" if cliente["alugado"] == False else cliente["alugado"]
+
+            print(f"\n{cliente['nome']:<20} {cliente['nascimento']:<15} {idade:<6} {cliente['email']:<30} {cpfFormatado:<15} {cepFormatado:<15} {cliente['telefone']:<15} {alugado}") # Formatação das váriaveis
     else:
         print("\nNenhum cadastro encontrado")
 
 def verificar_produtos():
     produtos = carregar_dados("produtos")
     if produtos:
-        print(f"\n   {'Nome':<30} {'Cor':<20} {'Ano':<10} {'Fabricante':<20} {'Carroceria'}")
-        print("-" * 110)
+        print(f"\n   {'Nome':<30} {'Cor':<20} {'Ano':<10} {'Fabricante':<20} {'Carroceria':<20} {'Alugado?'}")
+        print("-" * 120)
         
         for produto in produtos:
-            print(f"{produtos.index(produto)+1}. {produto["nome"]:<30} {produto["cor"]:<20} {produto["ano"]:<10} {produto["fabricante"]:<20} {produto["carroceria"]}")
+            alugado = "❌" if produto["alugado"] == False else "✅"
+            print(f"{produtos.index(produto)+1}. {produto["nome"]:<30} {produto["cor"]:<20} {produto["ano"]:<10} {produto["fabricante"]:<20} {produto["carroceria"]:<20} {alugado}")
     else:
         print("\nNenhum produto disponível")
 
@@ -155,7 +158,7 @@ def atualizar_cadastros():
         if cliente["cpf"] == cpf:
                 opcao = input("Digite a opção que deseja alterar: ")
 
-                if(opcao.lower() in cliente or opcao.lower() == "idade"): # Caso a opção escolhida exista.
+                if(opcao.lower() in cliente or opcao.lower() == "idade") and opcao.lower() != "alugado": # Caso a opção escolhida exista.
                     if(opcao.lower() == "idade"):
                         opcao = "nascimento"
 
@@ -182,7 +185,7 @@ def atualizar_produtos():
             return
         
         opcao = input("Digite a opção que deseja alterar: ")
-        if opcao.lower() in produtos[produto_escolhido]:
+        if opcao.lower() in produtos[produto_escolhido] and opcao.lower() != "alugado":
             opcaoInfo = input(f"Digite o(a) novo(a) {opcao.lower()}: ")
             if opcao.lower() == "ano":
                 if not opcaoInfo.isdigit():
@@ -203,7 +206,6 @@ def atualizar_produtos():
     except:
         print("Número da Posição do Produto Inválido.")
         return
-
 
 # Função para excluir um cadastro
 def excluir_cadastro():
@@ -250,29 +252,36 @@ def alugar_produto():
         return 
     for cliente in cadastros:
         if cliente["cpf"] == cpf:
-            if cliente["alugado"] == False:
-                try:
-                    produtos = carregar_dados("produtos")
-                    verificar_produtos()
-                    produto_escolhido = int(input("Digite o número da posição do produto que deseja alugar: "))-1
-                    if produto_escolhido > (len(produtos)-1) or produto_escolhido < 0:
-                        print("Produto não localizado.")
+            dataNascimento = date(int(cliente['nascimento'][6:]),int(cliente['nascimento'][3:5]),int(cliente['nascimento'][:2])) # Transforma a data de nascimento em um formato xx-xx-xxxx
+            idade = (date.today() - dataNascimento).days//365 # Diminui o dia de hoje pela data de nascimento e converte para anos
+
+            if idade >= 18:  
+                if cliente["alugado"] == False:
+                    try:
+                        produtos = carregar_dados("produtos")
+                        verificar_produtos()
+                        produto_escolhido = int(input("Digite o número da posição do produto que deseja alugar: "))-1
+                        if produto_escolhido > (len(produtos)-1) or produto_escolhido < 0:
+                            print("Produto não localizado.")
+                            return
+                        if produtos[produto_escolhido]["alugado"] == True:
+                            print("Produto já está alugado.")
+                            return
+                        else:
+                            cliente["alugado"] = produtos[produto_escolhido]["nome"]
+                            produtos[produto_escolhido]["alugado"] = True
+                            salvar_dados(cadastros, "clientes")
+                            salvar_dados(produtos, "produtos")
+                            print("Produto alugado com sucesso.")
+                            return
+                    except:
+                        print("Número da Posição do Produto Inválido.")
                         return
-                    if produtos[produto_escolhido]["alugado"] == True:
-                        print("Produto já está alugado.")
-                        return
-                    else:
-                        cliente["alugado"] = produtos[produto_escolhido]["nome"]
-                        produtos[produto_escolhido]["alugado"] = True
-                        salvar_dados(cadastros, "clientes")
-                        salvar_dados(produtos, "produtos")
-                        print("Produto alugado com sucesso.")
-                        return
-                except:
-                    print("Número da Posição do Produto Inválido.")
+                else: 
+                    print("Cada Cliente pode alugar apenas um produto.")
                     return
-            else: 
-                print("Cada Cliente pode alugar apenas um produto.")
+            else:
+                print("Você precisa ser maior de idade para alugar um carro.")
                 return
     print("Cadastro não localizado.")
 
@@ -305,43 +314,65 @@ def devolver_produto():
 # Função para exibir o menu e processar as escolhas do usuário
 def menu():
     while True:
-        print("\n---BANCO DE DADOS DE CLIENTES---")
-        print("1. Fazer cadastro")
-        print("2. Consultar cadastro")
-        print("3. Atualizar cadastro")
-        print("4. Excluir cadastro")
-        print("\n---BANCO DE DADOS DE PRODUTOS---")
-        print("5. Adicionar produto")
-        print("6. Consultar produto")
-        print("7. Atualizar produto")
-        print("8. Excluir produto")
-        print("\n9. Sair")
+        print("\nBem Vindo a Locadora de Automóveis!")
+        print("1. BANCO DE DADOS DE CLIENTES")
+        print("2. BANCO DE DADOS DE PRODUTOS")
+        print("3. ALUGAR E DEVOLVER PRODUTO")
+        print("4. SAIR")
 
-        escolha = input("\nEscolha uma das opções: ") 
-        #Permite a escolha do menu
+        escolha = input("\nEscolha uma das opções: ")
+
         if escolha == "1":
-            adicionar_cadastro()
+            print("\n---BANCO DE DADOS DE CLIENTES---")
+            print("1. Fazer cadastro")
+            print("2. Consultar cadastro")
+            print("3. Atualizar cadastro")
+            print("4. Excluir cadastro")
+            escolha = input("\nEscolha uma das opções: ")
+            if escolha == "1":
+                adicionar_cadastro()
+            elif escolha == "2":
+                verificar_cadastros()
+            elif escolha == "3":
+                atualizar_cadastros()
+            elif escolha == "4":
+                excluir_cadastro()
+            else:
+                print("\nEscolha inválida, por favor escolha uma opção disponível.")
+        
         elif escolha == "2":
-            verificar_cadastros()
+            print("\n---BANCO DE DADOS DE PRODUTOS---")
+            print("1. Adicionar produto")
+            print("2. Consultar produto")
+            print("3. Atualizar produto")
+            print("4. Excluir produto")
+            escolha = input("\nEscolha uma das opções: ")
+            if escolha == "1":
+                adicionar_produto()
+            elif escolha == "2":
+                verificar_produtos()
+            elif escolha == "3":
+                atualizar_produtos()
+            elif escolha == "4":
+                excluir_produto()
+            else:
+                print("\nEscolha inválida, por favor escolha uma opção disponível.")
+
         elif escolha == "3":
-            atualizar_cadastros()
+            print("\n---ALUGAR E DEVOLVER PRODUTO---")
+            print("1. Alugar produto")
+            print("2. Devolver produto")
+            escolha = input("\nEscolha uma das opções: ")
+            if escolha == "1":
+                alugar_produto()
+            elif escolha == "2":
+                devolver_produto()
+            else:
+                print("\nEscolha inválida, por favor escolha uma opção disponível.")
+            
         elif escolha == "4":
-            excluir_cadastro()
-        elif escolha == "5":
-            adicionar_produto()
-        elif escolha == "6":
-            verificar_produtos()
-        elif escolha == "7":
-            atualizar_produtos()
-        elif escolha == "8":
-            excluir_produto()
-        elif escolha == "9":
             print("\nFinalizando o programa...")
             break
-        elif escolha == "10":
-            alugar_produto()
-        elif escolha == "11":
-            devolver_produto()
         else:
             print("\nEscolha inválida, por favor escolha uma opção disponível.")
 menu() #Chama o menu para exibição

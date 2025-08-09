@@ -7,5 +7,14 @@
         "cep": "12345001",
         "telefone": "13216854",
         "alugado": false
+    },
+    {
+        "nome": "paulo",
+        "nascimento": "07/06/2020",
+        "email": "gui@",
+        "cpf": "12365478910",
+        "cep": "12345678",
+        "telefone": "231564",
+        "alugado": false
     }
 ]
