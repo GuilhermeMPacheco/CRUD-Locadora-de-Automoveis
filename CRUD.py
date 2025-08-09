@@ -3,19 +3,31 @@ from datetime import date
 
 # Arquivo para armazenar informações
 registros = "registros.json"
+produtos = "produtos.json"
 
 # Função para carregar dados do arquivo
-def carregar_dados():
-    try:
-        with open(registros, "r") as arquivo: #Faz a leitura do arquivo .json
-            return json.load(arquivo)
-    except (FileNotFoundError, json.JSONDecodeError):
-        return []
+def carregar_dados(type):
+    if(type == "clientes"):
+        try:
+            with open(registros, "r") as arquivo: #Faz a leitura do arquivo .json
+                return json.load(arquivo)
+        except (FileNotFoundError, json.JSONDecodeError):
+            return []
+    elif(type == "produtos"):
+        try:
+            with open(produtos, "r") as arquivo: #Faz a leitura do arquivo .json
+                return json.load(arquivo)
+        except (FileNotFoundError, json.JSONDecodeError):
+            return []
 
 # Função para salvar dados no arquivo
-def salvar_dados(cadastros):
-    with open(registros, "w") as arquivo: #Escreve o arquivo ou sobrescreve um arquivo .json
-        json.dump(cadastros, arquivo, indent=4)  #Descarrega as informações para cadastros
+def salvar_dados(cadastros, type):
+    if(type == "clientes"):
+        with open(registros, "w") as arquivo: #Escreve o arquivo ou sobrescreve um arquivo .json
+            json.dump(cadastros, arquivo, indent=4)  #Descarrega as informações para cadastros
+    if(type == "produtos"):
+        with open(produtos, "w") as arquivo: #Escreve o arquivo ou sobrescreve um arquivo .json
+            json.dump(cadastros, arquivo, indent=4)  #Descarrega as informações para cadastros
 
 def opcoes_cadastro(opcao): # Função de pegar o resultado de cada item separadamente
     if(opcao == "nome"):
@@ -72,7 +84,7 @@ def opcoes_cadastro(opcao): # Função de pegar o resultado de cada item separad
     
 # Função para adicionar um novo cadastro
 def adicionar_cadastro():
-    cadastros = carregar_dados()
+    cadastros = carregar_dados("clientes")
     opcoes = ["nome", "nascimento", "email", "cpf", "cep","telefone"] # Lista das opções
     novo_cliente = {} # Cria um objeto vazio
 
@@ -82,12 +94,27 @@ def adicionar_cadastro():
             return
 
     cadastros.append(novo_cliente) #Adiciona as informações nos vetores
-    salvar_dados(cadastros)
+    salvar_dados(cadastros, "clientes")
     print("\nCliente cadastrado com sucesso!")
+
+def adicionar_produto():
+    produtos = carregar_dados("produtos")
+    nome = input("Digite o nome do produto: ")
+    cor = input("Digite a cor do produto: ")
+    ano = input("Digite o ano de fabricação do produto: ")
+    if not ano.isdigit():
+        print("Ano do Produto Inválido.")
+        return
+    fabricante = input("Digite a fabricante do produto: ")
+    carroceria = input("Digite o tipo de carro ou carroceria: ")
+
+    produtos.append({"nome": nome, "cor": cor, "ano": ano, "fabricante": fabricante, "carroceria": carroceria})
+    salvar_dados(produtos, "produtos")
+    print("\nProduto cadastrado com sucesso!")
 
 # Função para verificar os cadastros existentes
 def verificar_cadastros():
-    cadastros = carregar_dados()
+    cadastros = carregar_dados("clientes")
     if cadastros:
         # Cabeçalho da tabela
         print(f"\n{'Nome':<20} {'Nascimento':<15} {'Idade':<6} {'Email':<30} {'CPF':<15} {'CEP':<15} {'Telefone':<15}") #Formatação do cabeçalho
@@ -105,9 +132,20 @@ def verificar_cadastros():
     else:
         print("\nNenhum cadastro encontrado")
 
+def verificar_produtos():
+    produtos = carregar_dados("produtos")
+    if produtos:
+        print(f"\n   {'Nome':<30} {'Cor':<20} {'Ano':<10} {'Fabricante':<20} {'Carroceria'}")
+        print("-" * 110)
+        
+        for produto in produtos:
+            print(f"{produtos.index(produto)+1}. {produto["nome"]:<30} {produto["cor"]:<20} {produto["ano"]:<10} {produto["fabricante"]:<20} {produto["carroceria"]}")
+    else:
+        print("\nNenhum produto disponível")
+
 # Função para atualizar um cadastro existente
 def atualizar_cadastros():
-    cadastros = carregar_dados()
+    cadastros = carregar_dados("clientes")
     verificar_cadastros() #Chama a função de verificação já formatada para a exibição dos cadastros
     cpf = input("\nDigite o CPF do cliente que deseja atualizar, usando apenas números (ou 'cancelar' para voltar): ")
     if cpf.lower() == 'cancelar': #Utilização do lower para o uso da palavra em maiuscula como input.
@@ -126,7 +164,7 @@ def atualizar_cadastros():
                         return
                     else:
                         cliente[opcao.lower()] = novaInfo
-                        salvar_dados(cadastros) # E Envia para o JSON
+                        salvar_dados(cadastros, "clientes") # E Envia para o JSON
                         print("\nCadastro atualizado com sucesso!")
                         return 
                 else: # Caso a não opcao exista
@@ -134,9 +172,42 @@ def atualizar_cadastros():
                     return
     print("\nCadastro não localizado") # Caso não encontre o CPF, essa mensagem será enviada.
 
+def atualizar_produtos():
+    try:
+        produtos = carregar_dados("produtos")
+        verificar_produtos()
+        produto_escolhido = int(input("Digite o número da posição do produto que deseja atualizar: "))-1
+        if produto_escolhido > (len(produtos)-1) or produto_escolhido < 0:
+            print("Produto não localizado.")
+            return
+        
+        opcao = input("Digite a opção que deseja alterar: ")
+        if opcao.lower() in produtos[produto_escolhido]:
+            opcaoInfo = input(f"Digite o(a) novo(a) {opcao.lower()}: ")
+            if opcao.lower() == "ano":
+                if not opcaoInfo.isdigit():
+                    print("Ano Inválido.")
+                    return
+                else:
+                    produtos[produto_escolhido][opcao.lower()] = opcaoInfo
+                    salvar_dados(produtos, "produtos")
+                    print("\nProduto atualizado com sucesso!")   
+                    return        
+            produtos[produto_escolhido][opcao.lower()] = opcaoInfo
+            salvar_dados(produtos, "produtos")
+            print("\nProduto atualizado com sucesso!")       
+            return
+        else:
+            print("Opção Inválida.")
+            return
+    except:
+        print("Número da Posição do Produto Inválido.")
+        return
+
+
 # Função para excluir um cadastro
 def excluir_cadastro():
-    cadastros = carregar_dados()
+    cadastros = carregar_dados("clientes")
     verificar_cadastros()
     cpf = input("\nDigite o CPF do cliente a ser excluído, usando apenas os números (ou 'cancelar' para voltar): ")
     
@@ -147,18 +218,43 @@ def excluir_cadastro():
         print("\nCadastro não localizado.")
         return
     cadastros = [cliente for cliente in cadastros if cliente["cpf"] != cpf] #Faz a verificação de cada cliente para fazer a exclusão criando uma lista sobre a outra (list comprehension)
-    salvar_dados(cadastros)
+    salvar_dados(cadastros, "clientes")
     print("\nCadastro excluído com sucesso!")
+
+def excluir_produto():
+    try:
+        produtos = carregar_dados("produtos")
+        verificar_produtos()
+        produto_escolhido = int(input("Digite o número da posição do produto que deseja atualizar: "))-1
+        if produto_escolhido > (len(produtos)-1) or produto_escolhido < 0:
+            print("Produto não localizado.")
+            return
+        cancelar = input("Excluir o produto é permanente, você deseja continuar? ('S' Sim - 'N' Não): ")
+        if cancelar.lower() == "s":
+            produtos = [produto for produto in produtos if produtos.index(produto) != produto_escolhido]
+            salvar_dados(produtos, "produtos")
+            print("\nProduto excluído com sucesso!")
+        else:
+            print("Operação Cancelada.")
+            return
+    except:
+        print("Número da Posição do Produto Inválido.")
+        return
 
 # Função para exibir o menu e processar as escolhas do usuário
 def menu():
     while True:
-        print("\n---BANCO DE DADOS DE CLIENTES TECHNOVA---")
+        print("\n---BANCO DE DADOS DE CLIENTES---")
         print("1. Fazer cadastro")
         print("2. Consultar cadastro")
         print("3. Atualizar cadastro")
         print("4. Excluir cadastro")
-        print("5. Sair")
+        print("\n---BANCO DE DADOS DE PRODUTOS---")
+        print("5. Adicionar produto")
+        print("6. Consultar produto")
+        print("7. Atualizar produto")
+        print("8. Excluir produto")
+        print("\n9. Sair")
 
         escolha = input("\nEscolha uma das opções: ") 
         #Permite a escolha do menu
@@ -171,6 +267,14 @@ def menu():
         elif escolha == "4":
             excluir_cadastro()
         elif escolha == "5":
+            adicionar_produto()
+        elif escolha == "6":
+            verificar_produtos()
+        elif escolha == "7":
+            atualizar_produtos()
+        elif escolha == "8":
+            excluir_produto()
+        elif escolha == "9":
             print("\nFinalizando o programa...")
             break
         else:
