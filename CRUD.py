@@ -225,7 +225,7 @@ def excluir_produto():
     try:
         produtos = carregar_dados("produtos")
         verificar_produtos()
-        produto_escolhido = int(input("Digite o número da posição do produto que deseja atualizar: "))-1
+        produto_escolhido = int(input("Digite o número da posição do produto que deseja excluir: "))-1
         if produto_escolhido > (len(produtos)-1) or produto_escolhido < 0:
             print("Produto não localizado.")
             return
@@ -240,6 +240,67 @@ def excluir_produto():
     except:
         print("Número da Posição do Produto Inválido.")
         return
+
+def alugar_produto():
+    cadastros = carregar_dados("clientes")
+    verificar_cadastros()
+    cpf = input("\nDigite o CPF do cliente que deseja alugar o produto, usando apenas números (ou 'cancelar' para voltar): ")
+    if cpf.lower() == 'cancelar':
+        print("\nOperação de alugar produto cancelada.")
+        return 
+    for cliente in cadastros:
+        if cliente["cpf"] == cpf:
+            if cliente["alugado"] == False:
+                try:
+                    produtos = carregar_dados("produtos")
+                    verificar_produtos()
+                    produto_escolhido = int(input("Digite o número da posição do produto que deseja alugar: "))-1
+                    if produto_escolhido > (len(produtos)-1) or produto_escolhido < 0:
+                        print("Produto não localizado.")
+                        return
+                    if produtos[produto_escolhido]["alugado"] == True:
+                        print("Produto já está alugado.")
+                        return
+                    else:
+                        cliente["alugado"] = produtos[produto_escolhido]["nome"]
+                        produtos[produto_escolhido]["alugado"] = True
+                        salvar_dados(cadastros, "clientes")
+                        salvar_dados(produtos, "produtos")
+                        print("Produto alugado com sucesso.")
+                        return
+                except:
+                    print("Número da Posição do Produto Inválido.")
+                    return
+            else: 
+                print("Cada Cliente pode alugar apenas um produto.")
+                return
+    print("Cadastro não localizado.")
+
+def devolver_produto():
+    cadastros = carregar_dados("clientes")
+    verificar_cadastros()
+    cpf = input("\nDigite o CPF do cliente que deseja devolver um produto, usando apenas números (ou 'cancelar' para voltar): ")
+    if cpf.lower() == 'cancelar':
+        print("\nOperação de devolver produto cancelada.")
+        return 
+    for cliente in cadastros:
+        if cliente["cpf"] == cpf:
+            if cliente["alugado"] != False:
+                produtos = carregar_dados("produtos")
+                for produto in produtos:
+                    if produto["nome"] == cliente["alugado"]:
+                        cliente["alugado"] = False
+                        produto["alugado"] = False
+                        salvar_dados(cadastros, "clientes")
+                        salvar_dados(produtos, "produtos")
+                        print("Produto devolvido com sucesso.")
+                        return
+                print("Algum problema ocorreu, tente novamente.")
+                return
+            else:
+                print("Cliente não tem nenhum produto alugado.")
+                return
+    print("Cadastro não localizado.")
 
 # Função para exibir o menu e processar as escolhas do usuário
 def menu():
@@ -277,6 +338,10 @@ def menu():
         elif escolha == "9":
             print("\nFinalizando o programa...")
             break
+        elif escolha == "10":
+            alugar_produto()
+        elif escolha == "11":
+            devolver_produto()
         else:
             print("\nEscolha inválida, por favor escolha uma opção disponível.")
 menu() #Chama o menu para exibição

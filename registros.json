@@ -5,6 +5,7 @@
         "email": "kaue@jose",
         "cpf": "12365478900",
         "cep": "12345001",
-        "telefone": "13216854"
+        "telefone": "13216854",
+        "alugado": false
     }
-] 
+]
